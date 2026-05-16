@@ -1,28 +1,31 @@
-from dataclasses import dataclass
 import os
 from dotenv import load_dotenv
-
+from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class AppConfig:
+    """
+    application's configuration
+    """
     dataset_path: str
-    llm_provider: str
-    openai_model: str | None
-    azure_endpoint: str | None
-    azure_api_version: str | None
-    azure_deployment: str | None
+    nebius_api_key: str
+    nebius_base_url: str
+    nebius_agent_model: str
+    nebius_router_model: str
     max_agent_iterations: int
 
 
 def load_config() -> AppConfig:
+    """
+    load application's configuration from .env file
+    """
     load_dotenv()
 
     return AppConfig(
         dataset_path=os.getenv("DATASET_PATH", "data/bitext_customer_service.csv"),
-        llm_provider=os.getenv("LLM_PROVIDER", "openai").lower().strip(),
-        openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        azure_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+        nebius_api_key=os.getenv("NEBIUS_API_KEY", ""),
+        nebius_base_url=os.getenv("NEBIUS_BASE_URL", "https://api.studio.nebius.com/v1/"),
+        nebius_agent_model=os.getenv("NEBIUS_AGENT_MODEL", "openai/gpt-oss-120b"),
+        nebius_router_model=os.getenv("NEBIUS_ROUTER_MODEL", "openai/gpt-oss-120b"),
         max_agent_iterations=int(os.getenv("MAX_AGENT_ITERATIONS", "12")),
     )

@@ -30,7 +30,7 @@ The agent does not answer them from general knowledge.
 # 1. Project Structure
 
 ```text
-bitext_agent/
+Assignment3_agents/
 │
 ├── main.py
 ├── requirements.txt
@@ -60,8 +60,8 @@ bitext_agent/
 ## Step 1: Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd bitext_agent
+git clone https://github.com/pazitshefet/Assignment3_Agents
+cd Assignment3_agents
 ```
 
 ## Step 2: Create a virtual environment

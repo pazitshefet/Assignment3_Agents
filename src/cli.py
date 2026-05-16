@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
-
 
 class AgentCLI:
     """
@@ -13,18 +11,22 @@ class AgentCLI:
     - tool observations
     - final answer
     """
-
     def __init__(self, app, recursion_limit: int = 30):
         self.app = app
         self.recursion_limit = recursion_limit
 
     def run(self) -> None:
+        """
+        the interactive CLI loop.
+
+        The method waits for user input, sends each query to the agent, and exits when
+        the user types 'exit' or 'quit'.
+        """
         print("\nBitext Dataset Agent")
         print("Type 'exit' or 'quit' to stop.\n")
 
         while True:
             user_query = input("You: ").strip()
-
             if user_query.lower() in {"exit", "quit"}:
                 print("Goodbye.")
                 break
@@ -35,22 +37,24 @@ class AgentCLI:
             self._run_single_query(user_query)
 
     def _run_single_query(self, user_query: str) -> None:
-        print("\n--- Reasoning trace ---")
+        """
+        Run one user query through the agent.
 
+        Streams the graph execution, prints the reasoning trace, and finally prints the
+        last answer produced by the agent.
+        """
+        print("\n--- Reasoning trace ---")
         final_answer = None
 
         try:
-            events = self.app.stream(
-                {
+            events = self.app.stream({
                     "messages": [HumanMessage(content=user_query)],
                     "route": None,
                     "route_reason": None,
                     "iterations": 0,
                 },
                 config={"recursion_limit": self.recursion_limit},
-                stream_mode="updates",
-            )
-
+                stream_mode="updates")
             for event in events:
                 for node_name, update in event.items():
                     self._print_node_update(node_name, update)
@@ -65,23 +69,25 @@ class AgentCLI:
 
         except Exception as exc:
             print("\n--- Final answer ---")
-            print(
-                "The agent failed before completing the answer. "
-                f"Error: {type(exc).__name__}: {exc}"
-            )
+            print("The agent failed before completing the answer. "
+                  f"Error: {type(exc).__name__}: {exc}")
 
         print()
 
     def _print_node_update(self, node_name: str, update: dict) -> None:
+        """
+        Print one update emitted by a graph node.
+
+        This method displays router decisions, agent tool calls, tool observations, and
+        short answer drafts during execution.
+        """
         if node_name == "router":
             route = update.get("route")
             reason = update.get("route_reason")
-
             if route:
                 print(f"[router] route={route} | reason={reason}")
 
         messages = update.get("messages", [])
-
         for message in messages:
             if isinstance(message, AIMessage):
                 tool_calls = getattr(message, "tool_calls", None)
@@ -100,9 +106,13 @@ class AgentCLI:
                 print(f"[tool] observation from {message.name}: {preview}")
 
     def _truncate(self, text: str, max_chars: int = 700) -> str:
-        text = str(text)
+        """
+        Shorten long text before printing it in the CLI.
 
+        This keeps tool observations readable and prevents very large dataset outputs
+        from flooding the terminal.
+        """
+        text = str(text)
         if len(text) <= max_chars:
             return text
-
         return text[:max_chars] + "... [truncated]"

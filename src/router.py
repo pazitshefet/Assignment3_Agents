@@ -1,22 +1,22 @@
-from langchain_core.language_models.chat_models import BaseChatModel
-
 from src.schemas import QueryRoute
-
+from langchain_core.language_models.chat_models import BaseChatModel
 
 class QueryRouter:
     """
     Dedicated router node.
 
-    It decides whether a query is:
-    1. structured
-    2. unstructured
-    3. out_of_scope
+    It decides whether a query is: structured, unstructured or out_of_scope
     """
-
     def __init__(self, llm: BaseChatModel):
         self.llm = llm.with_structured_output(QueryRoute)
 
     def route(self, user_query: str) -> QueryRoute:
+        """
+        Classify the user's query before tool selection begins.
+
+        The method asks the LLM to choose one route: structured, unstructured, or out_of_scope
+        and returns the decision with a short explanation.
+        """
         prompt = f"""
 You are a router for a dataset analysis agent.
 
