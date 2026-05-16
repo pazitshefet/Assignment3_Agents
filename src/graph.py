@@ -1,5 +1,4 @@
 from typing import Annotated, Literal, TypedDict
-from __future__ import annotations
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import BaseTool

@@ -1,4 +1,3 @@
-from __future__ import annotations
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 class AgentCLI:

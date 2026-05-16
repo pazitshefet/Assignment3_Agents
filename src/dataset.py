@@ -3,7 +3,6 @@ import pandas as pd
 from typing import Any
 from pathlib import Path
 from dataclasses import dataclass
-from __future__ import annotations
 
 @dataclass
 class DatasetColumns:

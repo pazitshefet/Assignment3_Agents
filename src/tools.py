@@ -1,5 +1,4 @@
 from typing import Type
-from __future__ import annotations
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, ConfigDict
 from src.dataset import BitextDataset
