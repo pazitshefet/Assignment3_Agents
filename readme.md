@@ -90,112 +90,77 @@ On Windows:
 pip install -r requirements.txt
 ```
 
-## Step 4: Add the dataset
+## Step 4: Update the `.env` file
 
-Download the Bitext Customer Service Tagged Training Dataset and place the CSV file here:
-
-```text
-data/bitext_customer_service.csv
-```
-
-The default dataset path is:
-
-```text
-data/bitext_customer_service.csv
-```
-
-You can change it in the `.env` file.
-
-## Step 5: Create the `.env` file
-
-Copy the example file:
-
-```bash
-cp .env.example .env
-```
-
-Then edit `.env` and add your Nebius Token Factory API key.
-
-Example:
-
-```env
-NEBIUS_API_KEY=your_nebius_api_key
-NEBIUS_BASE_URL=https://api.studio.nebius.com/v1/
-
-NEBIUS_AGENT_MODEL=openai/gpt-oss-120b
-NEBIUS_ROUTER_MODEL=openai/gpt-oss-120b
-
-DATASET_PATH=data/bitext_customer_service.csv
-MAX_AGENT_ITERATIONS=12
-
-MEMORY_DB_PATH=memory/agent_memory.sqlite
-```
-
-If the exact model name is different in your Nebius account, replace it with the model name shown in Nebius Token Factory.
-
+Edit `.env` and set your Nebius Token Factory API key.
+other properties should not be changed, but it is possible to update them
+For example: change the LLM models or the maximum number of
 ---
 
-# 3. How to Run the CLI
+# 4. How to Run the CLI
 
 Start the interactive command-line agent:
-
 ```bash
 python main.py
 ```
 
 You should see:
-
 ```text
 Bitext Dataset Agent
 Type 'exit' or 'quit' to stop.
+
+You:
 ```
 
+And then you should insert your question
 Example questions:
-
 ```text
 What categories exist in the dataset?
 ```
-
 ```text
 How many refund requests did we get?
 ```
-
 ```text
 Show me 5 examples of the SHIPPING category.
 ```
-
 ```text
 Summarize how agents respond to complaint intents.
 ```
-
 ```text
 Show me examples of people wanting their money back.
 ```
-
 ```text
 What is the distribution of intents in the ACCOUNT category?
 ```
 
 Out-of-scope examples:
-
 ```text
 Who is the president of France?
 ```
-
 ```text
 What's the best CRM software for handling complaints?
 ```
-
 The agent should politely refuse these because they are not answerable from the dataset.
+
+## Demo Mode
+
+The project also includes an optional demo mode.
+Demo mode runs the 8 test questions specified above automatically, one after another.
+This is useful for quickly checking that the router, tools, reasoning trace, out-of-scope handling, and final answers all work correctly.
+
+Run:
+```bash
+python main.py --demo
+````
+Manual mode is still the default
 
 ---
 
-# 4. Reasoning Output
+# 5. Reasoning Output
 
 The CLI prints the agent's reasoning trace.
 
 Example:
-
 ```text
 --- Reasoning trace ---
 [router] route=structured | reason=The user asks for available dataset categories.
@@ -206,29 +171,17 @@ Example:
 --- Final answer ---
 The dataset contains these categories: ...
 ```
-
-This is useful for grading because it shows:
-
-- the router decision
-- tool calls
-- tool arguments
-- tool observations
-- the final answer
-
 ---
 
 # 5. MCP Server
 
 The project also exposes selected dataset tools through a FastMCP server.
-
 Start the MCP server:
-
 ```bash
 python -m src.mcp_server
 ```
 
 The MCP server exposes these tools:
-
 ```text
 list_categories
 list_intents
