@@ -10,49 +10,43 @@ class QueryRouter:
     def __init__(self, llm: BaseChatModel):
         self.llm = llm.with_structured_output(QueryRoute)
 
-    def route(self, user_query: str) -> QueryRoute:
+    def route(self, conversation_context: str) -> QueryRoute:
         """
         Classify the user's query before tool selection begins.
 
-        The method asks the LLM to choose one route: structured, unstructured, or out_of_scope
-        and returns the decision with a short explanation.
+        The method asks the LLM to choose one route: structured, unstructured, or
+        out_of_scope, and returns the decision with a short explanation.
         """
         prompt = f"""
-You are a router for a dataset analysis agent.
+    You are a router for a dataset analysis agent.
 
-The agent can ONLY answer questions about the Bitext customer service dataset.
+    The agent can ONLY answer questions about the Bitext customer service dataset.
 
-Classify the user query into one of:
+    You will receive recent conversation history.
+    Classify the latest user query using the full conversation context.
 
-structured:
-Concrete dataset questions requiring counts, lists, examples, filters, or distributions.
-Examples:
-- What categories exist in the dataset?
-- How many refund requests did we get?
-- Show me 3 examples from SHIPPING.
-- What is the distribution of intents in ACCOUNT?
+    Classify into one of:
 
-unstructured:
-Questions about the dataset that require summarization or qualitative explanation.
-Examples:
-- Summarize the FEEDBACK category.
-- How do agents respond to cancellation requests?
-- Summarize complaint intents.
+    structured:
+    Concrete dataset questions requiring counts, lists, examples, filters, or distributions.
+    Follow-up questions like "show me 3 more", "another 3", "what about refunds?",
+    or "what is the total count of the last two?" are structured if they refer to
+    previous dataset questions.
 
-out_of_scope:
-Questions not answerable from the dataset.
-Examples:
-- Who won the 2024 Champions League?
-- Write me a poem.
-- What is the best CRM software?
-- Who is the president of France?
+    unstructured:
+    Questions about the dataset that require summarization or qualitative explanation.
+    Follow-up summary questions are also unstructured if they refer to previous
+    dataset summaries.
 
-Important:
-If the question asks for general knowledge, advice, recommendations, or creative writing,
-classify it as out_of_scope, even if it mentions customer service.
+    out_of_scope:
+    Questions not answerable from the dataset.
 
-User query:
-{user_query}
-"""
+    Important:
+    If the latest message is a short follow-up and the previous conversation was
+    about the dataset, do NOT mark it out_of_scope.
+
+    Conversation:
+    {conversation_context}
+    """
 
         return self.llm.invoke(prompt)

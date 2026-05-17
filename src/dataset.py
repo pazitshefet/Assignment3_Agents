@@ -119,8 +119,8 @@ class BitextDataset:
         result.columns = ["intent", "count"]
         return result.to_dict(orient="records")
 
-    def examples(self, category: str | None = None,
-                 intent: str | None = None, text_search: str | None = None, limit: int = 5) -> list[dict[str, Any]]:
+    def examples(self, category: str | None = None, intent: str | None = None,
+                 text_search: str | None = None, limit: int = 5, offset: int = 0) -> list[dict[str, Any]]:
         """
         Return example rows from the dataset.
 
@@ -128,7 +128,7 @@ class BitextDataset:
         limited to the requested number of rows.
         """
         df = self._filter(category=category, intent=intent, text_search=text_search)
-        rows = df.head(limit)
+        rows = df.iloc[offset: offset + limit]
         return [{
                 "row_id": int(row["_row_id"]),
                 "category": str(row[self.columns.category]),

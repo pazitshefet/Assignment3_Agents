@@ -13,7 +13,7 @@ class AppConfig:
     nebius_agent_model: str
     nebius_router_model: str
     max_agent_iterations: int
-
+    memory_db_path: str
 
 def load_config() -> AppConfig:
     """
@@ -28,4 +28,5 @@ def load_config() -> AppConfig:
         nebius_agent_model=os.getenv("NEBIUS_AGENT_MODEL", "openai/gpt-oss-120b"),
         nebius_router_model=os.getenv("NEBIUS_ROUTER_MODEL", "openai/gpt-oss-120b"),
         max_agent_iterations=int(os.getenv("MAX_AGENT_ITERATIONS", "12")),
+        memory_db_path=os.getenv("MEMORY_DB_PATH", "memory/agent_memory.sqlite")
     )

@@ -10,8 +10,9 @@ class AgentCLI:
     - tool observations
     - final answer
     """
-    def __init__(self, app, recursion_limit: int = 30):
+    def __init__(self, app, session_id: str, recursion_limit: int = 30):
         self.app = app
+        self.session_id = session_id
         self.recursion_limit = recursion_limit
 
     def run(self) -> None:
@@ -46,13 +47,13 @@ class AgentCLI:
         final_answer = None
 
         try:
-            events = self.app.stream({
-                    "messages": [HumanMessage(content=user_query)],
-                    "route": None,
-                    "route_reason": None,
-                    "iterations": 0,
-                },
-                config={"recursion_limit": self.recursion_limit},
+            events = self.app.stream(
+                input={"messages": [HumanMessage(content=user_query)],
+                       "route": None,
+                       "route_reason": None,
+                       "iterations": 0},
+                config={"configurable": {"thread_id": self.session_id},
+                        "recursion_limit": self.recursion_limit},
                 stream_mode="updates")
             for event in events:
                 for node_name, update in event.items():

@@ -72,6 +72,9 @@ class ExamplesInput(BaseModel):
                        ge=1,
                        le=20,
                        description="Maximum number of examples to return.")
+    offset: int = Field(default=0,
+                        ge=0,
+                        description="Number of matching rows to skip before returning examples. Use this for follow-up requests like 'show me 3 more'.")
 
 
 class RowsForSummaryInput(BaseModel):

@@ -21,12 +21,13 @@ class BitextAgentGraph:
     Flow: START -> router -> if out_of_scope: END
                           -> agent -> tools -> agent -> ... -> END
     """
-    def __init__(self, llm: BaseChatModel, tools: list[BaseTool], max_iterations: int = 12):
+    def __init__(self, llm: BaseChatModel, tools: list[BaseTool], max_iterations: int = 12, checkpointer=None):
         self.llm = llm
         self.tools = tools
         self.max_iterations = max_iterations
         self.router = QueryRouter(llm)
         self.llm_with_tools = llm.bind_tools(tools)
+        self.checkpointer=checkpointer
 
     def build(self):
         """
@@ -52,7 +53,7 @@ class BitextAgentGraph:
                                       "end": END})
         graph.add_edge("tools", "agent")
         graph.add_edge("fallback", END)
-        return graph.compile()
+        return graph.compile(checkpointer=self.checkpointer)
 
     def _router_node(self, state: AgentState) -> dict:
         """
@@ -61,8 +62,8 @@ class BitextAgentGraph:
         This node classifies the user query as structured, unstructured, or out-of-scope
         before the agent is allowed to select tools.
         """
-        user_query = self._last_user_message(state)
-        route_result = self.router.route(user_query)
+        conversation_context = self._conversation_context(state)
+        route_result = self.router.route(conversation_context)
 
         if route_result.route == "out_of_scope":
             return {"route": route_result.route,
@@ -146,6 +147,35 @@ class BitextAgentGraph:
 
         raise ValueError("No user message found in state.")
 
+    def _conversation_context(self, state: AgentState, max_messages: int = 12) -> str:
+        """
+        Build a short readable conversation history for the router.
+
+        This helps the router understand follow-up questions such as 'another 3'
+        or 'what about refunds?'.
+        """
+        recent_messages = state["messages"][-max_messages:]
+        lines = []
+
+        for message in recent_messages:
+            msg_type = getattr(message, "type", "")
+
+            if msg_type == "human":
+                role = "User"
+            elif msg_type == "ai":
+                role = "Assistant"
+            elif msg_type == "tool":
+                role = "Tool"
+            else:
+                role = msg_type or "Message"
+
+            content = str(getattr(message, "content", ""))
+            if len(content) > 700:
+                content = content[:700] + "... [truncated]"
+            lines.append(f"{role}: {content}")
+
+        return "\n".join(lines)
+
     def _system_prompt(self, route: str) -> str:
         """
         Create the system prompt for the agent.
@@ -166,4 +196,6 @@ Rules:
 7. For final answers, be concise and clear.
 8. If the data is insufficient, say that clearly.
 9. Do not invent categories, intents, counts, or examples.
+10. For follow-up requests that ask for more examples, reuse the same filters from the previous examples request and increase the offset by the number of examples already shown for that same request context. 
+    Do not restart from offset 0 unless the user changes the category, intent, or search topic.
 """

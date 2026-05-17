@@ -4,6 +4,7 @@ from src.config import load_config
 from src.dataset import BitextDataset
 from src.graph import BitextAgentGraph
 from src.tools import ToolFactory
+from src.memory import MemoryFactory
 from langchain_openai import ChatOpenAI
 
 DEMO_QUESTIONS = [
@@ -35,11 +36,14 @@ def build_app():
     dataset = BitextDataset(config.dataset_path)
     tools = ToolFactory(dataset).create_tools()
     llm = create_llm(config)
+    memory_factory = MemoryFactory(config.memory_db_path)
+    checkpointer = memory_factory.create_checkpointer()
     graph_builder = BitextAgentGraph(llm=llm,
                                      tools=tools,
-                                     max_iterations=config.max_agent_iterations)
+                                     max_iterations=config.max_agent_iterations,
+                                     checkpointer=checkpointer)
     app = graph_builder.build()
-    return app, config
+    return app, config, memory_factory
 
 def main():
     """
@@ -52,10 +56,15 @@ def main():
     parser.add_argument("--demo",
                         action="store_true",
                         help="Run the assignment demo questions automatically.")
+    parser.add_argument("--session",
+                        default="default",
+                        help="Persistent conversation session ID. Reuse the same ID to restore memory.")
     args = parser.parse_args()
-    app, config = build_app()
+    app, config, memory_factory = build_app()
     cli = AgentCLI(app=app,
+                   session_id=args.session,
                    recursion_limit=config.max_agent_iterations * 3)
+    print(f"Using session: {args.session}")
 
     if args.demo:
         for question in DEMO_QUESTIONS:

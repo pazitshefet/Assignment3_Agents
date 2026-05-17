@@ -104,16 +104,18 @@ class SampleExamplesTool(DatasetTool):
                         "'Show me examples of people wanting their money back'.")
     args_schema: Type[BaseModel] = ExamplesInput
 
-    def _run(self, category: str | None = None,
-        intent: str | None = None, text_search: str | None = None, limit: int = 5) -> str:
+    def _run(self, category: str | None = None, intent: str | None = None,
+             text_search: str | None = None, limit: int = 5, offset: int = 0) -> str:
         examples = self.dataset.examples(category=category,
                                          intent=intent,
                                          text_search=text_search,
-                                         limit=limit)
+                                         limit=limit,
+                                         offset=offset)
         return self.dataset.to_json({"category": category,
                                      "intent": intent,
                                      "text_search": text_search,
                                      "limit": limit,
+                                     "offset": offset,
                                      "examples": examples})
 
 class RowsForSummaryTool(DatasetTool):
