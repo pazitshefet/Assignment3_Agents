@@ -21,13 +21,14 @@ class BitextAgentGraph:
     Flow: START -> router -> if out_of_scope: END
                           -> agent -> tools -> agent -> ... -> END
     """
-    def __init__(self, llm: BaseChatModel, tools: list[BaseTool], max_iterations: int = 12, checkpointer=None):
+    def __init__(self, llm: BaseChatModel, tools: list[BaseTool], max_iterations: int = 12, checkpointer=None,  profile_memory=None):
         self.llm = llm
         self.tools = tools
         self.max_iterations = max_iterations
         self.router = QueryRouter(llm)
         self.llm_with_tools = llm.bind_tools(tools)
         self.checkpointer=checkpointer
+        self.profile_memory=profile_memory
 
     def build(self):
         """
@@ -180,10 +181,16 @@ class BitextAgentGraph:
         """
         Create the system prompt for the agent.
         """
+        user_profile = (self.profile_memory.load() if self.profile_memory is not None
+                       else "# User Profile\n\nNo stable user facts known yet.")
+
         return f"""
 You are a dataset analysis agent for the Bitext Customer Service Tagged Training Dataset.
 
 The router classified the query as: {route}
+
+The known persistent user profile:
+{user_profile}
 
 Rules:
 1. Answer ONLY from the dataset.
@@ -193,9 +200,11 @@ Rules:
 5. If the user asks for a summary, first retrieve representative rows using get_rows_for_summary.
 6. If the user uses natural language like "money back", "refund requests", or "cancellation requests",
    first inspect available intents/categories when needed, then choose the closest dataset filter.
-7. For final answers, be concise and clear.
-8. If the data is insufficient, say that clearly.
-9. Do not invent categories, intents, counts, or examples.
-10. For follow-up requests that ask for more examples, reuse the same filters from the previous examples request and increase the offset by the number of examples already shown for that same request context. 
+7. User profile questions are allowed and are not out-of-scope
+8. If the user asks what you remember about them, answer from the persistent user profile.
+9. For final answers, be concise and clear.
+10. If the data is insufficient, say that clearly.
+11. Do not invent categories, intents, counts, or examples.
+12. For follow-up requests that ask for more examples, reuse the same filters from the previous examples request and increase the offset by the number of examples already shown for that same request context. 
     Do not restart from offset 0 unless the user changes the category, intent, or search topic.
 """

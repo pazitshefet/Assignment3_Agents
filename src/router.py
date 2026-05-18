@@ -20,12 +20,12 @@ class QueryRouter:
         prompt = f"""
     You are a router for a dataset analysis agent.
 
-    The agent can ONLY answer questions about the Bitext customer service dataset.
-
+    The agent can answer:
+    1. Questions about the Bitext customer service dataset.
+    2. Questions about the persistent user profile
+    
     You will receive recent conversation history.
-    Classify the latest user query using the full conversation context.
-
-    Classify into one of:
+    Classify the latest user query, using the full conversation context, into one of:
 
     structured:
     Concrete dataset questions requiring counts, lists, examples, filters, or distributions.

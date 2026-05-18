@@ -5,6 +5,7 @@ from src.dataset import BitextDataset
 from src.graph import BitextAgentGraph
 from src.tools import ToolFactory
 from src.memory import MemoryFactory
+from src.profile_memory import UserProfileMemory
 from langchain_openai import ChatOpenAI
 
 DEMO_QUESTIONS = [
@@ -24,7 +25,7 @@ def create_llm(config):
                       base_url=config.nebius_base_url,
                       temperature=0)
 
-def build_app():
+def build_app(user: str):
     """
     Build the full agent application.
 
@@ -38,12 +39,16 @@ def build_app():
     llm = create_llm(config)
     memory_factory = MemoryFactory(config.memory_db_path)
     checkpointer = memory_factory.create_checkpointer()
+    profile_memory = UserProfileMemory(user_id=user)
+
     graph_builder = BitextAgentGraph(llm=llm,
                                      tools=tools,
                                      max_iterations=config.max_agent_iterations,
-                                     checkpointer=checkpointer)
+                                     checkpointer=checkpointer,
+                                     profile_memory=profile_memory)
     app = graph_builder.build()
-    return app, config, memory_factory
+
+    return app, config, memory_factory, profile_memory, llm
 
 def main():
     """
@@ -57,14 +62,24 @@ def main():
                         action="store_true",
                         help="Run the assignment demo questions automatically.")
     parser.add_argument("--session",
-                        default="default",
+                        default="default_session",
                         help="Persistent conversation session ID. Reuse the same ID to restore memory.")
+    parser.add_argument("--user",
+                        default="default_user",
+                        help="User ID for persistent profile memory. Reuse the same user ID to restore the same profile.")
     args = parser.parse_args()
-    app, config, memory_factory = build_app()
+
+    app, config, memory_factory, profile_memory, llm = build_app(args.user)
+    thread_id = f"{args.user}:{args.session}"
     cli = AgentCLI(app=app,
-                   session_id=args.session,
-                   recursion_limit=config.max_agent_iterations * 3)
+                   session_id=thread_id,
+                   recursion_limit=config.max_agent_iterations * 3,
+                   profile_memory = profile_memory,
+                   profile_llm = llm)
+
+    print(f"Using user: {args.user}")
     print(f"Using session: {args.session}")
+    print(f"Using thread: {thread_id}")
 
     if args.demo:
         for question in DEMO_QUESTIONS:

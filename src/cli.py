@@ -10,10 +10,12 @@ class AgentCLI:
     - tool observations
     - final answer
     """
-    def __init__(self, app, session_id: str, recursion_limit: int = 30):
+    def __init__(self, app, session_id: str, recursion_limit: int = 30, profile_memory=None, profile_llm=None):
         self.app = app
         self.session_id = session_id
         self.recursion_limit = recursion_limit
+        self.profile_memory = profile_memory
+        self.profile_llm = profile_llm
 
     def run(self) -> None:
         """
@@ -66,6 +68,12 @@ class AgentCLI:
 
             print("\n--- Final answer ---")
             print(final_answer or "No final answer was produced.")
+
+            # update user profile after answering his query
+            if self.profile_memory is not None and self.profile_llm is not None:
+                self.profile_memory.update_after_turn(llm=self.profile_llm,
+                                                      user_message=user_query,
+                                                      assistant_answer=final_answer or "")
 
         except Exception as exc:
             print("\n--- Final answer ---")
