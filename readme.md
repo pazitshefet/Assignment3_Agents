@@ -1,6 +1,7 @@
 # Bitext Customer Service Dataset Agent
 
 This project implements a LangGraph-based ReAct agent that answers questions about the **Bitext Customer Service Tagged Training Dataset**.
+The project was written by **Pazit Shefet**
 
 The agent supports:
 
@@ -30,7 +31,6 @@ The project also includes:
 - a Streamlit chat app
 - a demo mode for quick testing
 
-The project was written by **Pazit Shefet**
 ---
 
 # 1. Project Structure
