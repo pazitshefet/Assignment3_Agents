@@ -30,6 +30,7 @@ The project also includes:
 - a Streamlit chat app
 - a demo mode for quick testing
 
+The project was written by **Pazit Shefet**
 ---
 
 # 1. Project Structure
